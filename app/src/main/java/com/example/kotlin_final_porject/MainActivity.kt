@@ -24,9 +24,11 @@ class MainActivity : AppCompatActivity() {
     private val TAG = "MainActivity"
     private val requestPermissionID = 101
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        startCameraSource()
 
     }
     private fun startCameraSource() {

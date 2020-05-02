@@ -1,21 +1,26 @@
 package com.example.kotlin_final_porject
 
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import android.view.SurfaceHolder
 import android.view.SurfaceView
+import android.view.View
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import com.example.kotlin_final_project.R
+import androidx.core.content.ContextCompat
 import com.google.android.gms.vision.CameraSource
 import com.google.android.gms.vision.Detector
 import com.google.android.gms.vision.Detector.Detections
 import com.google.android.gms.vision.text.TextBlock
 import com.google.android.gms.vision.text.TextRecognizer
+import java.io.FileNotFoundException
+import java.io.FileOutputStream
 import java.io.IOException
 
 
@@ -49,7 +54,6 @@ class MainActivity : AppCompatActivity() {
         }
         return true
     }
-
     private fun startCameraSource() {
         if (!textRecognizer.isOperational) {
             Log.w(TAG, "Detector dependencies not loaded yet")
@@ -94,6 +98,22 @@ class MainActivity : AppCompatActivity() {
             })
         }
     }
+    val newText : String = mTextView.toString()
+    fun save(v: View) {
+        val fos : FileOutputStream = openFileOutput(newText, Context.MODE_PRIVATE)
+        try {
+            Toast.makeText(this, "it is saved to " + getFilesDir() + "/" + newText, Toast.LENGTH_LONG).show()
+        } catch (e: FileNotFoundException) {
+            e.printStackTrace()
+
+        } finally {
+            if (fos != null) {
+                fos.close()
+            }
+        }
+
+    }
+
 
 
 }

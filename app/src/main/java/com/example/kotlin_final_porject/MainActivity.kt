@@ -9,6 +9,7 @@ import android.view.SurfaceView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import com.example.kotlin_final_project.R
 import com.google.android.gms.vision.CameraSource
 import com.google.android.gms.vision.Detector
@@ -24,33 +25,48 @@ class MainActivity : AppCompatActivity() {
     private val mTextView: TextView = findViewById(R.id.text_view)
     private val TAG = "MainActivity"
     private val requestPermissionID = 101
+    val textRecognizer = TextRecognizer.Builder(applicationContext).build()
+    val mCameraSource = CameraSource.Builder(applicationContext, textRecognizer)
+        .setFacing(CameraSource.CAMERA_FACING_BACK)
+        .setRequestedPreviewSize(1280, 1024)
+        .setAutoFocusEnabled(true)
+        .setRequestedFps(2.0f)
+        .build()
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        startCameraSource()
+        if (checkPermission()) {
+            startCameraSource()
+        } else {
+            requestPermission()
+        }
+
 
     }
-    private fun startCameraSource() {
 
-        //Create the TextRecognizer
-        val textRecognizer = TextRecognizer.Builder(applicationContext).build()
+    private fun checkPermission() : Boolean {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+            != PackageManager.PERMISSION_GRANTED) {
+            return false
+        }
+        return true
+    }
+
+    private fun requestPermission() {
+        ActivityCompat.requestPermissions(
+            this, arrayOf(Manifest.permission.CAMERA),
+            requestPermissionID
+        )
+    }
+
+
+
+    private fun startCameraSource() {
         if (!textRecognizer.isOperational) {
             Log.w(TAG, "Detector dependencies not loaded yet")
         } else {
-
-            //Initialize camerasource to use high resolution and set Autofocus on.
-            val mCameraSource = CameraSource.Builder(applicationContext, textRecognizer)
-                .setFacing(CameraSource.CAMERA_FACING_BACK)
-                .setRequestedPreviewSize(1280, 1024)
-                .setAutoFocusEnabled(true)
-                .setRequestedFps(2.0f)
-                .build()
-            /**
-             * Add call back to SurfaceView and check if camera permission is granted.
-             * If permission is granted we can start our cameraSource and pass it to surfaceView
-             */
             mCameraView.getHolder().addCallback(object : SurfaceHolder.Callback {
                 override fun surfaceCreated(holder: SurfaceHolder) {
                     try {
@@ -59,11 +75,7 @@ class MainActivity : AppCompatActivity() {
                                 Manifest.permission.CAMERA
                             ) != PackageManager.PERMISSION_GRANTED
                         ) {
-                            ActivityCompat.requestPermissions(
-                                this@MainActivity,
-                                arrayOf(Manifest.permission.CAMERA),
-                                requestPermissionID
-                            )
+                            requestPermission()
                             return
                         }
                         mCameraSource.start(mCameraView.getHolder())
@@ -80,22 +92,14 @@ class MainActivity : AppCompatActivity() {
                 ) {
                 }
 
-                /**
-                 * Release resources for cameraSource
-                 */
                 override fun surfaceDestroyed(holder: SurfaceHolder) {
                     mCameraSource.stop()
                 }
             })
 
-            //Set the TextRecognizer's Processor.
             textRecognizer.setProcessor(object : Detector.Processor<TextBlock> {
                 override fun release() {}
 
-                /**
-                 * Detect all the text from camera using TextBlock and the values into a stringBuilder
-                 * which will then be set to the textView.
-                 */
                 override fun receiveDetections(detections: Detections<TextBlock>) {
                     val items = detections.detectedItems
                     if (items.size() != 0) {

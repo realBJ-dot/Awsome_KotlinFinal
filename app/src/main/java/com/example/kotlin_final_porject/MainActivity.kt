@@ -33,19 +33,15 @@ class MainActivity : AppCompatActivity() {
         .setRequestedFps(2.0f)
         .build()
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         if (checkPermission()) {
             startCameraSource()
         } else {
-            requestPermission()
+            ActivityCompat.requestPermissions(this@MainActivity, arrayOf(Manifest.permission.CAMERA), requestPermissionID)
         }
-
-
     }
-
     private fun checkPermission() : Boolean {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
             != PackageManager.PERMISSION_GRANTED) {
@@ -54,15 +50,6 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
-    private fun requestPermission() {
-        ActivityCompat.requestPermissions(
-            this, arrayOf(Manifest.permission.CAMERA),
-            requestPermissionID
-        )
-    }
-
-
-
     private fun startCameraSource() {
         if (!textRecognizer.isOperational) {
             Log.w(TAG, "Detector dependencies not loaded yet")
@@ -70,12 +57,9 @@ class MainActivity : AppCompatActivity() {
             mCameraView.getHolder().addCallback(object : SurfaceHolder.Callback {
                 override fun surfaceCreated(holder: SurfaceHolder) {
                     try {
-                        if (ActivityCompat.checkSelfPermission(
-                                applicationContext,
-                                Manifest.permission.CAMERA
-                            ) != PackageManager.PERMISSION_GRANTED
-                        ) {
-                            requestPermission()
+                        if (ActivityCompat.checkSelfPermission(applicationContext, Manifest.permission.CAMERA)
+                            != PackageManager.PERMISSION_GRANTED) {
+                            ActivityCompat.requestPermissions(this@MainActivity, arrayOf(Manifest.permission.CAMERA), requestPermissionID)
                             return
                         }
                         mCameraSource.start(mCameraView.getHolder())
@@ -84,17 +68,9 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
 
-                override fun surfaceChanged(
-                    holder: SurfaceHolder,
-                    format: Int,
-                    width: Int,
-                    height: Int
-                ) {
-                }
+                override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {}
 
-                override fun surfaceDestroyed(holder: SurfaceHolder) {
-                    mCameraSource.stop()
-                }
+                override fun surfaceDestroyed(holder: SurfaceHolder) { mCameraSource.stop() }
             })
 
             textRecognizer.setProcessor(object : Detector.Processor<TextBlock> {
